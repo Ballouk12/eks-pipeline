@@ -9,15 +9,7 @@ pipeline {
         CLUSTER_ENDPOINT = 'https://F1DFB6A2A0D97186B6408CD13D101A75.gr7.eu-west-3.eks.amazonaws.com'
         CLUSTER_OIDC_ISSUER = 'https://oidc.eks.eu-west-3.amazonaws.com/id/F1DFB6A2A0D97186B6408CD13D101A75'
         CLUSTER_SG_ID = 'sg-0810f03f119a4ef58'
-        SERVICES = [
-            'discovery-service', 
-            'config-service', 
-            'gateway-service', 
-            'inscription-service',
-            'messagerie-service',
-            'notification-service',
-            'gestion-bourse-candidature-service'
-        ]
+        SERVICES = 'discovery-service config-service gateway-service inscription-service messagerie-service notification-service gestion-bourse-candidature-service'
         FRONTEND_APP = 'Excellia_Frontend'
     }
     
@@ -46,7 +38,9 @@ pipeline {
         stage('Build and Push Backend Images') {
             steps {
                 script {
-                    for (service in SERVICES) {
+                    def servicesList = SERVICES.split(' ')
+                    for (int i = 0; i < servicesList.length; i++) {
+                        def service = servicesList[i]
                         dir("Excellia_bourse/${service}") {
                             // Construction du JAR
                             sh 'mvn clean package -DskipTests'
@@ -67,14 +61,16 @@ pipeline {
         
         stage('Build and Push Frontend Image') {
             steps {
-                dir(FRONTEND_APP) {
-                    def frontendImageTag = "${ECR_REPO_URL}:frontend-${BUILD_NUMBER}"
-                    
-                    sh """
-                        docker build -t ${frontendImageTag} .
-                        docker push ${frontendImageTag}
-                        echo "Frontend image ${frontendImageTag} pushed to ECR"
-                    """
+                script {
+                    dir(FRONTEND_APP) {
+                        def frontendImageTag = "${ECR_REPO_URL}:frontend-${BUILD_NUMBER}"
+                        
+                        sh """
+                            docker build -t ${frontendImageTag} .
+                            docker push ${frontendImageTag}
+                            echo "Frontend image ${frontendImageTag} pushed to ECR"
+                        """
+                    }
                 }
             }
         }
