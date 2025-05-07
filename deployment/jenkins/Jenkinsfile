@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        AWS_ACCOUNT_ID = '597088035400'
+        AWS_ACCOUNT_ID = '597088035400'-
         AWS_REGION = 'eu-west-3'
         ECR_REPO_URL = '597088035400.dkr.ecr.eu-west-3.amazonaws.com/excellia'
         CLUSTER_NAME = 'excellia-eks-cluster'
@@ -22,16 +22,18 @@ pipeline {
         
         stage('Setup Environment') {
             steps {
-                sh '''
-                    # Installer ou mettre à jour les outils nécessaires
-                    ansible-playbook -i localhost, deployment/ansible/setup-tools.yml -c local -b
-                    
-                    # Authentification à ECR
-                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
-                    
-                    # Configurer kubeconfig pour accéder au cluster EKS
-                    aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
-                '''
+                withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                    sh '''
+                        # Installer ou mettre à jour les outils nécessaires
+                        ansible-playbook -i localhost, deployment/ansible/setup-tools.yml -c local -b
+                        
+                        # Authentification à ECR
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+                        
+                        # Configurer kubeconfig pour accéder au cluster EKS
+                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+                    '''
+                }
             }
         }
         
@@ -131,6 +133,7 @@ pipeline {
             }
         }
         
+
         stage('Validate Deployment') {
             steps {
                 sh '''
