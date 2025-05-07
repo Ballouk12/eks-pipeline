@@ -1,27 +1,43 @@
-
 - hosts: localhost
   become: yes  # Utiliser sudo pour installer les packages
-  
+
   vars:
     aws_cli_version: "2"
     kubectl_version: "v1.27.0"
     eksctl_version: "latest_release"
     helm_version: "v3.12.0"
-    
+
   tasks:
     - name: Récupérer les informations sur la distribution
       debug:
         msg: "Distribution: {{ ansible_distribution }}, Version: {{ ansible_distribution_version }}"
-      
+
     - name: Vérifier si le système d'exploitation est supporté
       fail:
         msg: "Ce playbook est conçu pour Amazon Linux 2, Amazon Linux 2023, Ubuntu ou Debian"
       when: >
-        (ansible_distribution != 'Amazon' and ansible_distribution != 'Ubuntu' and ansible_distribution != 'Debian') and
-        (ansible_distribution != 'Amazon Linux' and ansible_distribution != 'Amazon Linux 2023')
-      
-    - name: Installer les dépendances système
-      package:
+        ansible_distribution not in ['Amazon', 'Ubuntu', 'Debian'] or
+        ansible_distribution_version not in ['2', '2023']
+
+    - name: Clean dnf cache
+      ansible.builtin.command: dnf clean all
+      changed_when: false
+      when: ansible_distribution == 'Amazon'
+
+    - name: Rebuild dnf cache
+      ansible.builtin.command: dnf makecache
+      changed_when: false
+      when: ansible_distribution == 'Amazon'
+
+    - name: Remove curl-minimal if present
+      ansible.builtin.dnf:
+        name: curl-minimal
+        state: absent
+      when: ansible_distribution == 'Amazon'
+      ignore_errors: yes  # Continue even if curl-minimal is not installed
+
+    - name: Install system dependencies
+      ansible.builtin.dnf:
         name: "{{ item }}"
         state: present
       loop:
@@ -31,14 +47,37 @@
         - git
         - python3
         - python3-pip
-      
+      when: ansible_distribution == 'Amazon'
+      register: dnf_result
+      retries: 3
+      delay: 5
+      until: dnf_result is success
+
+    - name: Install system dependencies for Ubuntu/Debian
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - curl
+        - unzip
+        - tar
+        - git
+        - python3
+        - python3-pip
+      when: ansible_distribution in ['Ubuntu', 'Debian']
+      register: apt_result
+      retries: 3
+      delay: 5
+      until: apt_result is success
+
     # Installation de AWS CLI v2
     - name: Vérifier si AWS CLI est déjà installé
       command: aws --version
       register: aws_cli_check
       ignore_errors: yes
       changed_when: false
-      
+
     - name: Télécharger AWS CLI v2
       get_url:
         url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
@@ -51,25 +90,25 @@
         dest: "/tmp/"
         remote_src: yes
       when: aws_cli_check.rc != 0 or aws_cli_version not in aws_cli_check.stdout
-      
+
     - name: Installer AWS CLI v2
       command: sh /tmp/aws/install --update
       when: aws_cli_check.rc != 0 or aws_cli_version not in aws_cli_check.stdout
-      
+
     # Installation de kubectl
     - name: Vérifier si kubectl est déjà installé
       command: kubectl version --client=true --short
       register: kubectl_check
       ignore_errors: yes
       changed_when: false
-      
+
     - name: Télécharger kubectl
       get_url:
         url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
         dest: "/usr/local/bin/kubectl"
         mode: '0755'
       when: kubectl_check.rc != 0 or kubectl_version not in kubectl_check.stdout
-      
+
     # Installation de eksctl
     - name: Vérifier si eksctl est déjà installé
       command: eksctl version
@@ -83,35 +122,35 @@
         mv /tmp/eksctl /usr/local/bin
         chmod +x /usr/local/bin/eksctl
       when: eksctl_check.rc != 0
-      
+
     # Installation de Helm
     - name: Vérifier si Helm est déjà installé
       command: helm version --short
       register: helm_check
       ignore_errors: yes
       changed_when: false
-      
+
     - name: Télécharger et installer Helm
       shell: |
         curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
         chmod 700 /tmp/get_helm.sh
         /tmp/get_helm.sh --version {{ helm_version }}
       when: helm_check.rc != 0 or helm_version not in helm_check.stdout
-      
+
     # Configuration pour Jenkins
     - name: S'assurer que l'utilisateur jenkins existe
       user:
         name: jenkins
         state: present
       ignore_errors: yes
-      
+
     - name: S'assurer que l'utilisateur jenkins peut exécuter Docker
       user:
         name: jenkins
         groups: docker
         append: yes
       ignore_errors: yes  # Ignorer l'erreur si le groupe docker n'existe pas
-      
+
     - name: Créer le répertoire .aws pour l'utilisateur jenkins
       file:
         path: "/var/lib/jenkins/.aws"
@@ -119,15 +158,15 @@
         owner: jenkins
         group: jenkins
         mode: '0700'
-        
-    - name: Vérifier si le répertoire .kube existe
+
+    - name: Créer le répertoire .kube pour l'utilisateur jenkins
       file:
         path: "/var/lib/jenkins/.kube"
         state: directory
         owner: jenkins
         group: jenkins
         mode: '0700'
-        
+
     - name: Installer les outils Python nécessaires
       pip:
         name:
@@ -135,7 +174,7 @@
           - kubernetes
           - PyYAML
         executable: pip3
-        
+
     - name: Vérifier les installations
       shell: |
         echo "AWS CLI: $(aws --version)"
@@ -145,7 +184,7 @@
         echo "Python3: $(python3 --version)"
       register: versions_output
       changed_when: false
-      
+
     - name: Afficher les versions des outils
       debug:
         msg: "{{ versions_output.stdout_lines }}"
