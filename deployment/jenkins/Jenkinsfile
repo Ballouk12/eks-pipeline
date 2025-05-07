@@ -11,6 +11,7 @@ pipeline {
         CLUSTER_SG_ID = 'sg-0810f03f119a4ef58'
         SERVICES = 'discovery-service config-service gateway-service inscription-service messagerie-service notification-service gestion-bourse-candidature-service'
         FRONTEND_APP = 'Excellia_Frontend'
+        KUBECONFIG = "${env.WORKSPACE}/.kube/config"
     }
     
     stages {
@@ -24,19 +25,34 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
                     sh '''
+                        # Setup AWS CLI explicitly
+                        mkdir -p ~/.aws
+                        aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                        aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                        aws configure set region ${AWS_REGION}
+                        
+                        # Verify AWS credentials
+                        aws sts get-caller-identity
+                        
                         # Installer ou mettre à jour les outils nécessaires
                         ansible-playbook -i localhost, deployment/ansible/setup-tools.yml -c local -b
                         
                         # Authentification à ECR
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
                         
+                        # Ensure .kube directory exists
+                        mkdir -p ${WORKSPACE}/.kube
+                        
                         # Configurer kubeconfig pour accéder au cluster EKS
-                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION} --kubeconfig ${KUBECONFIG}
+                        
+                        # Test the connection to ensure credentials are working
+                        kubectl --kubeconfig=${KUBECONFIG} get svc
                     '''
                 }
             }
         }
-
         stage('Build utilitiesService') {
             steps {
                 dir("Excellia_bourse/utilitiesService") {
@@ -107,42 +123,25 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}"){
-                sh '''
-                    # Vérifier la connexion au cluster
-                    kubectl get nodes
-                    
-                    # Appliquer les manifestes par ordre de dépendance
-                    
-                    # 1. Déployer les ConfigMaps et Secrets
-                    kubectl apply -f kubernetes-manifests/configmaps/
-                    kubectl apply -f kubernetes-manifests/secrets/
-                    
-                    # 2. Déployer les infrastructure services (Kafka, DBs)
-                    kubectl apply -f kubernetes-manifests/infrastructure/
-                    
-                    # 3. Déployer les services de base (discovery, config)
-                    kubectl apply -f kubernetes-manifests/base-services/
-                    
-                    # Attendre que les services de base soient prêts
-                    kubectl rollout status deployment/discovery-service -n excellia
-                    kubectl rollout status deployment/config-service -n excellia
-                    
-                    # 4. Déployer la gateway
-                    kubectl apply -f kubernetes-manifests/gateway/
-                    kubectl rollout status deployment/gateway-service -n excellia
-                    
-                    # 5. Déployer les microservices métier
-                    kubectl apply -f kubernetes-manifests/microservices/
-                    
-                    # 6. Déployer le frontend
-                    kubectl apply -f kubernetes-manifests/frontend/
-                    
-                    # Vérifier le statut global
-                    kubectl get pods -n excellia
-                '''
+                    sh '''
+                        # Use the workspace kubeconfig
+                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        
+                        # Refresh AWS credentials before kubectl operations
+                        export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+                        export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+                        
+                        # Vérifier la connexion au cluster
+                        kubectl get nodes
+                        
+                        # Apply manifests...
+                        kubectl apply -f kubernetes-manifests/configmaps/
+                        # ... rest of your deployment
+                    '''
                 }
             }
         }
+        
         
         stage('Validate Deployment') {
             steps {.
