@@ -145,7 +145,7 @@ pipeline {
         }
         
         stage('Validate Deployment') {
-            steps {.
+            steps {
             withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}"){
                 sh '''
                     # Vérifier que tous les pods sont en running
