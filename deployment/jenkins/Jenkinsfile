@@ -37,17 +37,12 @@ pipeline {
             }
         }
 
-
-        stage('Build utilitiesService Backend Images') {
+        stage('Build utilitiesService') {
             steps {
-                script {
-                    
-                        dir("Excellia_bourse/utilitiesService") {
-                            // Construction du JAR
-                            sh 'mvn clean package -DskipTests'
-                            
-                        }
-                    }
+                dir("Excellia_bourse/utilitiesService") {
+                    // Construction du JAR de utilitiesService et installation dans le repo local Maven
+                    sh 'mvn clean install -DskipTests'
+                    echo "utilitiesService built and installed in local Maven repository"
                 }
             }
         }
