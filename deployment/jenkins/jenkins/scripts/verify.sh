@@ -3,7 +3,7 @@ set -e
 
 echo "Verifying deployment..."
 
-# Déterminer l'environnement de déploiement et l'URL à vérifier
+# Déterminer l'environnement de déploi
 case "$DEPLOY_ENV" in
   "dev")
     BASE_URL="http://dev-excellia-app.votre-domaine.com"
