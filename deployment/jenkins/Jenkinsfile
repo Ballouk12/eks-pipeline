@@ -96,7 +96,6 @@ pipeline {
                     python3 deployment/scripts/generate_k8s_manifests.py \
                         --build-number ${BUILD_NUMBER} \
                         --ecr-repo ${ECR_REPO_URL} \
-                        --cluster-endpoint ${CLUSTER_ENDPOINT} \
                         --output-dir kubernetes-manifests
                 '''
                 
