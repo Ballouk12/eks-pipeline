@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/config-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/config_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/discovery-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/discovery_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gateway-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gateway_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gestion-bourse-candidature-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gestion_bourse_condidature_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/inscription-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/inscription_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/messagerie-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/messagerie_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notification_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ui-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ui-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utilitiesService/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utilitiesService/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

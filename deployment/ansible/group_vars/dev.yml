@@ -1,0 +1,16 @@
+#dev.yml
+---
+# Variables spécifiques à l'environnement de développement
+env_name: "dev"
+app_path: "{{ base_path }}/{{ env_name }}"
+docker_compose_file: "{{ app_path }}/docker-compose.yml"
+
+# Configuration de l'application
+spring_profiles: "dev,docker"
+config_git_branch: "dev"
+
+# Configuration des ressources
+jvm_memory: "-Xmx512m"
+
+# Configuration du déploiement
+enable_ui_tests: true

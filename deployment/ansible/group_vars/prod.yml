@@ -1,0 +1,19 @@
+#prod.yml
+---
+# Variables spécifiques à l'environnement de production
+env_name: "prod"
+app_path: "{{ base_path }}/{{ env_name }}"
+docker_compose_file: "{{ app_path }}/docker-compose.yml"
+
+# Configuration de l'application
+spring_profiles: "prod,docker"
+config_git_branch: "master"
+
+# Configuration des ressources
+jvm_memory: "-Xmx1024m"
+
+# Configuration du déploiement
+enable_ui_tests: false
+
+# Configuration de sécurité
+use_ssl: true

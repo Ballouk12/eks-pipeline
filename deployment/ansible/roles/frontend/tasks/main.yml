@@ -1,0 +1,28 @@
+---
+# Les tâches spécifiques au frontend si nécessaire
+- name: Check frontend status
+  uri:
+    url: "http://localhost:{{ frontend_port }}"
+    method: GET
+    status_code: 200
+  register: frontend_status
+  ignore_errors: yes
+  
+- name: Display frontend status
+  debug:
+    msg: "Frontend is {{ 'accessible' if frontend_status.status == 200 else 'not accessible' }}"
+  
+- name: Configure Nginx as reverse proxy for frontend (if needed)
+  block:
+    - name: Install Nginx
+      package:
+        name: nginx
+        state: present
+        
+    - name: Create Nginx configuration for frontend
+      template:
+        src: nginx-frontend.conf.j2
+        dest: /etc/nginx/conf.d/frontend.conf
+        mode: '0644'
+      notify: restart nginx
+  when: use_ssl | bool

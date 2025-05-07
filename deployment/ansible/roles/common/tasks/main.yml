@@ -1,0 +1,30 @@
+---
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400 # 24 heures en secondes
+  when: ansible_os_family == "Debian"
+
+- name: Update and upgrade yum packages
+  yum:
+    name: '*'
+    state: latest
+  when: ansible_os_family == "RedHat"
+
+- name: Create application directory
+  file:
+    path: "{{ app_path }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Install required packages
+  package:
+    name:
+      - git
+      - curl
+      - python3-pip
+      - python3-setuptools
+    state: present

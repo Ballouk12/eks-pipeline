@@ -1,0 +1,49 @@
+---
+- name: Copy docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ docker_compose_file }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0644'
+
+- name: Login to Docker Registry
+  shell: echo "{{ docker_registry_password }}" | docker login -u {{ docker_registry_username }} --password-stdin {{ docker_registry }}
+  no_log: true
+  become: yes
+  become_user: "{{ app_user }}"
+  
+- name: Pull latest images
+  shell: cd {{ app_path }} && {{ docker_compose_command }} pull
+  become: yes
+  become_user: "{{ app_user }}"
+  register: pull_result
+  
+- name: Display pull results
+  debug:
+    var: pull_result.stdout_lines
+    
+- name: Stop and remove containers
+  shell: cd {{ app_path }} && {{ docker_compose_command }} down
+  become: yes
+  become_user: "{{ app_user }}"
+  ignore_errors: yes
+  
+- name: Start containers
+  shell: cd {{ app_path }} && {{ docker_compose_command }} up -d
+  become: yes
+  become_user: "{{ app_user }}"
+  
+- name: Wait for services to start
+  pause:
+    seconds: 30
+    
+- name: Check services status
+  shell: cd {{ app_path }} && {{ docker_compose_command }} ps
+  become: yes
+  become_user: "{{ app_user }}"
+  register: services_status
+  
+- name: Display services status
+  debug:
+    var: services_status.stdout_lines

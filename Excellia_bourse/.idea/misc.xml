@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/pom.xml" />
+<<<<<<< HEAD
+=======
+        <option value="$PROJECT_DIR$/inscription_service/pom.xml" />
+        <option value="$PROJECT_DIR$/gestion_bourse_condidature_service/pom.xml" />
+        <option value="$PROJECT_DIR$/notification_service/pom.xml" />
+        <option value="$PROJECT_DIR$/messagerie_service/pom.xml" />
+        <option value="$PROJECT_DIR$/gateway_service/pom.xml" />
+        <option value="$PROJECT_DIR$/config_service/pom.xml" />
+        <option value="$PROJECT_DIR$/discovery_service/pom.xml" />
+        <option value="$PROJECT_DIR$/ui-tests/pom.xml" />
+        <option value="$PROJECT_DIR$/config-service/pom.xml" />
+        <option value="$PROJECT_DIR$/discovery-service/pom.xml" />
+        <option value="$PROJECT_DIR$/gestion-bourse-candidature-service/pom.xml" />
+        <option value="$PROJECT_DIR$/inscription-service/pom.xml" />
+        <option value="$PROJECT_DIR$/messagerie-service/pom.xml" />
+        <option value="$PROJECT_DIR$/utilitiesService/pom.xml" />
+        <option value="$PROJECT_DIR$/gateway-service/pom.xml" />
+        <option value="$PROJECT_DIR$/notification-service/pom.xml" />
+>>>>>>> 9a5505b750e70f6acd5c65b582fcff340a40f521
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+</project>

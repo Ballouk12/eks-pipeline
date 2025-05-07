@@ -1,0 +1,258 @@
+version: '3'
+
+services:
+  # Zookeeper (pour Kafka)
+  zookeeper:
+    image: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-network
+
+  # Kafka avec connectivité interne corrigée
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-network
+
+  # Base de données pour inscription-service
+  inscription-db:
+    image: mysql:8.0
+    container_name: inscription-db
+    environment:
+      MYSQL_DATABASE: inscription_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - inscription-db-data:/var/lib/mysql
+    networks:
+      - microservices-network
+
+  # Base de données pour messagerie-service
+  messagerie-db:
+    image: mysql:8.0
+    container_name: messagerie-db
+    environment:
+      MYSQL_DATABASE: messagerie_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3307:3306"
+    volumes:
+      - messagerie-db-data:/var/lib/mysql
+    networks:
+      - microservices-network
+
+  # Base de données pour notification-service
+  notification-db:
+    image: mysql:8.0
+    container_name: notification-db
+    environment:
+      MYSQL_DATABASE: notification_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3308:3306"
+    volumes:
+      - notification-db-data:/var/lib/mysql
+    networks:
+      - microservices-network
+
+  # Base de données pour bourse-candidature-service
+  bourse-candidature-db:
+    image: mysql:8.0
+    container_name: bourse-candidature-db
+    environment:
+      MYSQL_DATABASE: bourse_candidature_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3309:3306"
+    volumes:
+      - bourse-candidature-db-data:/var/lib/mysql
+    networks:
+      - microservices-network
+
+  # Service de découverte (Eureka)
+  discovery-service:
+    image: {{ docker_registry }}/{{ app_name }}/discovery-service:latest
+    container_name: discovery-service
+    ports:
+      - "{{ discovery_port }}:8761"
+    environment:
+      - SERVER_PORT=8761
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - JAVA_OPTS={{ jvm_memory }}
+    networks:
+      - microservices-network
+
+  # Service de configuration
+  config-service:
+    image: {{ docker_registry }}/{{ app_name }}/config-service:latest
+    container_name: config-service
+    ports:
+      - "{{ config_port }}:9998"
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/Ballouk12/excellia_config.git
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_BRANCH={{ config_git_branch }}
+      - SERVER_PORT=9998
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+    networks:
+      - microservices-network
+
+  # API Gateway
+  gateway-service:
+    image: {{ docker_registry }}/{{ app_name }}/gateway-service:latest
+    container_name: gateway-service
+    ports:
+      - "{{ gateway_port }}:8888"
+    environment:
+      - SERVER_PORT=8888
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:9998
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+    networks:
+      - microservices-network
+
+  # Service d'inscription
+  inscription-service:
+    image: {{ docker_registry }}/{{ app_name }}/inscription-service:latest
+    container_name: inscription-service
+    environment:
+      - SERVER_PORT=8085
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:9998
+      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:mysql://inscription-db:3306/inscription_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+      - kafka
+      - inscription-db
+      - config-service
+    networks:
+      - microservices-network
+
+  # Service de messagerie
+  messagerie-service:
+    image: {{ docker_registry }}/{{ app_name }}/messagerie-service:latest
+    container_name: messagerie-service
+    environment:
+      - SERVER_PORT=8086
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:9998
+      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:mysql://messagerie-db:3306/messagerie_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+      - kafka
+      - messagerie-db
+      - config-service
+    networks:
+      - microservices-network
+
+  # Service de gestion des bourses et candidatures
+  gestion-bourse-candidature-service:
+    image: {{ docker_registry }}/{{ app_name }}/gestion-bourse-candidature-service:latest
+    container_name: gestion-bourse-candidature-service
+    environment:
+      - SERVER_PORT=8084
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:9998
+      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:mysql://bourse-candidature-db:3306/bourse_candidature_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+      - kafka
+      - bourse-candidature-db
+      - config-service
+    networks:
+      - microservices-network
+
+  # Service de notification
+  notification-service:
+    image: {{ docker_registry }}/{{ app_name }}/notification-service:latest
+    container_name: notification-service
+    environment:
+      - SERVER_PORT=8087
+      - SPRING_PROFILES_ACTIVE={{ spring_profiles }}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:9998
+      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:mysql://notification-db:3306/notification_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - JAVA_OPTS={{ jvm_memory }}
+    depends_on:
+      - discovery-service
+      - kafka
+      - notification-db
+      - config-service
+    networks:
+      - microservices-network
+
+{% if enable_ui_tests %}
+  # UI Tests (uniquement activé si enable_ui_tests = true)
+  ui-tests:
+    image: {{ docker_registry }}/{{ app_name }}/ui-tests:latest
+    container_name: ui-tests
+    environment:
+      - GATEWAY_URL=http://gateway-service:8888
+    depends_on:
+      - gateway-service
+      - frontend
+    networks:
+      - microservices-network
+{% endif %}
+
+  # Frontend Next.js
+  frontend:
+    image: {{ docker_registry }}/{{ app_name }}/frontend:latest
+    container_name: frontend
+    ports:
+      - "{{ frontend_port }}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://gateway-service:8888
+    depends_on:
+      - gateway-service
+    networks:
+      - microservices-network
+
+volumes:
+  inscription-db-data:
+  messagerie-db-data:
+  notification-db-data:
+  bourse-candidature-db-data:
+  uploads-volume: 
+
+networks:
+  microservices-network:
+    driver: bridge

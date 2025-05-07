@@ -1,0 +1,207 @@
+.containar2 {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center; 
+    margin-bottom: 5px; 
+    margin-right: 200px;
+    background-color : #068b2e
+  }
+  
+  .title1 {
+    font-size: 50px; 
+    margin-bottom: 10px;
+    background: linear-gradient(to bottom, #068b2e, #bbb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .authContent {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px; 
+  }
+  
+  .imgContainer {
+    flex: 1;
+    height: 450px;
+    position: relative;
+    display: block; /* Ensure the image container is displayed */
+    margin-right : 150px;
+  }
+  
+  .image {
+    object-fit: contain; /* Ensure the image fits well */
+    animation: move 3s infinite ease alternate;
+  }
+  
+  @keyframes move {
+    from {
+      transform: translateY(-15px);
+    }
+    to {
+      transform: translateY(0px) scale(1.03);
+    }
+  }
+  
+  .authCard {
+    flex: 1;
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .authHeader {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .authHeader h1 {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .authHeader p {
+    color: #666;
+  }
+  
+  .authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .formGroup label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .formGroup input {
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  
+  .formGroup input:focus {
+    outline: none;
+    border-color: #2de348;
+  }
+  
+  .authButton {
+    margin-top: 10px;
+    padding: 14px;
+    border: none;
+    background-color: #188f14;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .authButton:hover {
+    background-color: #0ce784;
+  }
+  
+  .authButton:disabled {
+    background-color: #068b2e;
+    cursor: not-allowed;
+  }
+  
+  .authFooter {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .authLink {
+    color: #068b2e;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  
+  .authLink:hover {
+    color: #068b2e;
+    text-decoration: underline;
+  }
+  
+  .errorMessage {
+    background-color: #fee2e2;
+    color: #067541;
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #068b2e;
+  }
+  
+  /* Media query for tablets and desktop */
+  @media screen and (min-width: 768px) {
+    .imgContainer {
+      display: block;
+    }
+  }
+  
+  /* Dark theme support */
+  :global(.dark) .authContainer {
+    background-color: #1a1a1a;
+  }
+  
+  :global(.dark) .authCard {
+    background-color: #222;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  :global(.dark) .authHeader h1 {
+    color: #f5f5f5;
+  }
+  
+  :global(.dark) .authHeader p {
+    color: #bbb;
+  }
+  
+  :global(.dark) .formGroup label {
+    color: #ddd;
+  }
+  
+  :global(.dark) .formGroup input {
+    background-color: #333;
+    border-color: #444;
+    color: #f5f5f5;
+  }
+  
+  :global(.dark) .formGroup input:focus {
+    border-color: #0b7e0d;
+  }
+  
+  :global(.dark) .authFooter {
+    color: #bbb;
+  }
+  
+  :global(.dark) .errorMessage {
+    background-color: rgba(185, 28, 28, 0.2);
+    border-color: rgba(254, 202, 202, 0.2);
+  }
+  
+  .title {
+  font-size: 60px;
+  margin-bottom: 100px;
+  text-align: center;
+  }

@@ -1,0 +1,414 @@
+/* Registration Container */
+.registrationContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background-color: #f5f5f5;
+    transition: background-color 0.3s ease;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  :global(.dark) .registrationContainer {
+    background-color: #222;
+  }
+  
+  /* Registration Card */
+  .registrationCard {
+    width: 100%;
+    max-width: 900px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin: 2rem 0;
+    transition: all 0.3s ease;
+  }
+  
+  :global(.dark) .registrationCard {
+    background-color: #333;
+    color: #eee;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .registrationCard:hover {
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.15);
+  }
+  
+  :global(.dark) .registrationCard:hover {
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Header */
+  .registrationHeader {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .registrationHeader h1 {
+    font-size: 1.8rem;
+    color: #53c28b;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+  }
+  
+  .registrationHeader p {
+    font-size: 1.1rem;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+  
+  :global(.dark) .registrationHeader p {
+    color: #bbb;
+  }
+  
+  /* Progress Bar */
+  .progressBar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  
+  .progressBar::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+    transition: background-color 0.3s ease;
+  }
+  
+  :global(.dark) .progressBar::before {
+    background-color: #555;
+  }
+  
+  .progressStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .progressStep:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stepNumber {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    color: #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  :global(.dark) .stepNumber {
+    background-color: #555;
+    color: #bbb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .progressStep.active .stepNumber {
+    background-color: #53c28b;
+    color: white;
+    box-shadow: 0 4px 8px rgba(83, 194, 139, 0.4);
+  }
+  
+  .progressStep:hover .stepNumber {
+    box-shadow: 0 6px 12px rgba(83, 194, 139, 0.3);
+  }
+  
+  .stepLabel {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    transition: color 0.3s ease;
+  }
+  
+  :global(.dark) .stepLabel {
+    color: #bbb;
+  }
+  
+  .progressStep.active .stepLabel {
+    color: #53c28b;
+    font-weight: bold;
+  }
+  
+  /* Form Content */
+  .stepContent {
+    margin-bottom: 2rem;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  
+  .stepContent.entering {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  
+  .stepContent.active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .stepTitle {
+    font-size: 1.3rem;
+    color: #53c28b;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  
+  :global(.dark) .stepTitle {
+    border-bottom-color: #555;
+  }
+  
+  /* Form Groups */
+  .formGroup {
+    margin-bottom: 1.2rem;
+  }
+  
+  .formRow {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .formRow .formGroup {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #444;
+    transition: color 0.3s ease;
+  }
+  
+  :global(.dark) .formGroup label {
+    color: #ddd;
+  }
+  
+  .required {
+    color: #e74c3c;
+  }
+  
+  /* Input Fields */
+  .formGroup input,
+  .formGroup select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  :global(.dark) .formGroup input,
+  :global(.dark) .formGroup select {
+    background-color: #444;
+    border-color: #555;
+    color: #eee;
+  }
+  
+  .formGroup input:hover,
+  .formGroup select:hover {
+    border-color: #53c28b;
+  }
+  
+  .formGroup input:focus,
+  .formGroup select:focus {
+    outline: none;
+    border-color: #53c28b;
+    box-shadow: 0 0 0 3px rgba(83, 194, 139, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .formGroup input::placeholder {
+    color: #999;
+    transition: color 0.3s ease;
+  }
+  
+  :global(.dark) .formGroup input::placeholder {
+    color: #777;
+  }
+  
+  /* Error Message */
+  .errorMessage {
+    color: #e74c3c;
+    background-color: #fdecea;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  
+  @keyframes shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-3px); }
+    40%, 60% { transform: translateX(3px); }
+  }
+  
+  :global(.dark) .errorMessage {
+    background-color: #3a1e1d;
+  }
+  
+  /* Form Actions */
+  .formActions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+  
+  .previousButton,
+  .nextButton,
+  .submitButton,
+  .saveButton {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .previousButton {
+    background-color: #f0f0f0;
+    color: #666;
+  }
+  
+  :global(.dark) .previousButton {
+    background-color: #555;
+    color: #ddd;
+  }
+  
+  .previousButton:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  :global(.dark) .previousButton:hover {
+    background-color: #666;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .nextButton,
+  .submitButton {
+    background-color: #53c28b;
+    color: white;
+    box-shadow: 0 2px 4px rgba(83, 194, 139, 0.2);
+  }
+  
+  .nextButton:hover,
+  .submitButton:hover {
+    background-color: #45a878;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(83, 194, 139, 0.3);
+  }
+  
+  .submitButton:disabled {
+    background-color: #a0d4bb;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Save Form Action */
+  .saveFormAction {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  
+  .saveButton {
+    background-color: transparent;
+    color: #53c28b;
+    border: 1px solid #53c28b;
+    transition: all 0.3s ease;
+  }
+  
+  :global(.dark) .saveButton {
+    color: #53c28b;
+    border-color: #53c28b;
+  }
+  
+  .saveButton:hover {
+    background-color: rgba(83, 194, 139, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(83, 194, 139, 0.2);
+  }
+  
+  :global(.dark) .saveButton:hover {
+    background-color: rgba(83, 194, 139, 0.2);
+    box-shadow: 0 4px 8px rgba(83, 194, 139, 0.3);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .registrationCard {
+      padding: 1.5rem;
+    }
+    
+    .formRow {
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    
+    .progressBar {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .progressStep {
+      flex: 1 0 calc(50% - 1rem);
+    }
+    
+    .progressBar::before {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .registrationContainer {
+      padding: 1rem;
+    }
+    
+    .registrationHeader h1 {
+      font-size: 1.5rem;
+    }
+    
+    .stepTitle {
+      font-size: 1.1rem;
+    }
+    
+    .formActions {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .previousButton,
+    .nextButton,
+    .submitButton {
+      width: 100%;
+    }
+  }

@@ -1,0 +1,37 @@
+- hosts: all
+  become: no  # N'utilise pas sudo par défaut kll
+
+  tasks:
+    - name: S'assurer que Docker Compose est installé
+      shell: docker-compose --version
+      ignore_errors: yes
+
+    - name: Créer le répertoire de déploiement
+      file:
+        path: /var/lib/jenkins/deploy
+        state: directory
+        mode: '0755'
+      become: no
+
+    - name: Copier le docker-compose.yaml
+      copy:
+        src: "{{ playbook_dir }}/../../docker-compose.yaml"
+        dest: /var/lib/jenkins/deploy/docker-compose.yaml
+        mode: '0755'
+      delegate_to: localhost
+      become: no
+
+    - name: Copier le reste du projet
+      synchronize:
+        src: "{{ playbook_dir }}/../.."
+        dest: /var/lib/jenkins/deploy/
+        rsync_opts:
+          - "--exclude=.git"
+      delegate_to: localhost
+
+    - name: Lancer les conteneurs
+      shell: |
+        cd /var/lib/jenkins/deploy/Excellia-bourse-pipeline
+        ls -la
+        docker-compose up --build -d
+      become: no

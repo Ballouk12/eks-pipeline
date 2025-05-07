@@ -1,0 +1,178 @@
+pipeline {
+    agent any
+    
+    environment {
+        AWS_ACCOUNT_ID = '597088035400'
+        AWS_REGION = 'eu-west-3'
+        ECR_REPO_URL = '597088035400.dkr.ecr.eu-west-3.amazonaws.com/excellia'
+        CLUSTER_NAME = 'excellia-eks-cluster'
+        CLUSTER_ENDPOINT = 'https://F1DFB6A2A0D97186B6408CD13D101A75.gr7.eu-west-3.eks.amazonaws.com'
+        CLUSTER_OIDC_ISSUER = 'https://oidc.eks.eu-west-3.amazonaws.com/id/F1DFB6A2A0D97186B6408CD13D101A75'
+        CLUSTER_SG_ID = 'sg-0810f03f119a4ef58'
+        SERVICES = [
+            'discovery-service', 
+            'config-service', 
+            'gateway-service', 
+            'inscription-service',
+            'messagerie-service',
+            'notification-service',
+            'gestion-bourse-candidature-service'
+        ]
+        FRONTEND_APP = 'Excellia_Frontend'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Setup Environment') {
+            steps {
+                sh '''
+                    # Installer ou mettre à jour les outils nécessaires
+                    ansible-playbook -i localhost, deployment/ansible/setup-tools.yml -c local -b
+                    
+                    # Authentification à ECR
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+                    
+                    # Configurer kubeconfig pour accéder au cluster EKS
+                    aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+                '''
+            }
+        }
+        
+        stage('Build and Push Backend Images') {
+            steps {
+                script {
+                    for (service in SERVICES) {
+                        dir("Excellia_bourse/${service}") {
+                            // Construction du JAR
+                            sh 'mvn clean package -DskipTests'
+                            
+                            def imageTag = "${ECR_REPO_URL}:${service}-${BUILD_NUMBER}"
+                            
+                            // Construction et push de l'image Docker
+                            sh """
+                                docker build -t ${imageTag} .
+                                docker push ${imageTag}
+                                echo "Image ${imageTag} pushed to ECR"
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build and Push Frontend Image') {
+            steps {
+                dir(FRONTEND_APP) {
+                    def frontendImageTag = "${ECR_REPO_URL}:frontend-${BUILD_NUMBER}"
+                    
+                    sh """
+                        docker build -t ${frontendImageTag} .
+                        docker push ${frontendImageTag}
+                        echo "Frontend image ${frontendImageTag} pushed to ECR"
+                    """
+                }
+            }
+        }
+        
+        stage('Generate Kubernetes Manifests') {
+            steps {
+                sh '''
+                    mkdir -p kubernetes-manifests
+                    
+                    # Générer les ConfigMaps, Secrets, etc. à partir des templates
+                    python3 deployment/scripts/generate_k8s_manifests.py \
+                        --build-number ${BUILD_NUMBER} \
+                        --ecr-repo ${ECR_REPO_URL} \
+                        --cluster-endpoint ${CLUSTER_ENDPOINT} \
+                        --output-dir kubernetes-manifests
+                '''
+                
+                // Archiver les manifestes générés pour référence future
+                archiveArtifacts artifacts: 'kubernetes-manifests/**/*', fingerprint: true
+            }
+        }
+        
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                    # Vérifier la connexion au cluster
+                    kubectl get nodes
+                    
+                    # Appliquer les manifestes par ordre de dépendance
+                    
+                    # 1. Déployer les ConfigMaps et Secrets
+                    kubectl apply -f kubernetes-manifests/configmaps/
+                    kubectl apply -f kubernetes-manifests/secrets/
+                    
+                    # 2. Déployer les infrastructure services (Kafka, DBs)
+                    kubectl apply -f kubernetes-manifests/infrastructure/
+                    
+                    # 3. Déployer les services de base (discovery, config)
+                    kubectl apply -f kubernetes-manifests/base-services/
+                    
+                    # Attendre que les services de base soient prêts
+                    kubectl rollout status deployment/discovery-service -n excellia
+                    kubectl rollout status deployment/config-service -n excellia
+                    
+                    # 4. Déployer la gateway
+                    kubectl apply -f kubernetes-manifests/gateway/
+                    kubectl rollout status deployment/gateway-service -n excellia
+                    
+                    # 5. Déployer les microservices métier
+                    kubectl apply -f kubernetes-manifests/microservices/
+                    
+                    # 6. Déployer le frontend
+                    kubectl apply -f kubernetes-manifests/frontend/
+                    
+                    # Vérifier le statut global
+                    kubectl get pods -n excellia
+                '''
+            }
+        }
+        
+        stage('Validate Deployment') {
+            steps {
+                sh '''
+                    # Vérifier que tous les pods sont en running
+                    kubectl wait --for=condition=Ready pods --all -n excellia --timeout=300s
+                    
+                    # Récupérer l'URL du service de frontend
+                    FRONTEND_URL=$(kubectl get svc frontend -n excellia -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                    
+                    echo "Application déployée avec succès!"
+                    echo "Frontend accessible à l'adresse: http://${FRONTEND_URL}"
+                    echo "Cluster endpoint: ${CLUSTER_ENDPOINT}"
+                '''
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline exécuté avec succès! L\'application est déployée sur EKS.'
+            
+            // Envoyer une notification de succès
+            sh '''
+                # Vous pouvez ajouter ici des commandes pour envoyer des notifications
+                # Par exemple, un webhook vers Slack ou Microsoft Teams
+            '''
+        }
+        failure {
+            echo 'Le pipeline a échoué. Vérifiez les logs pour plus de détails.'
+            
+            // Envoyer une notification d'échec
+            sh '''
+                # Vous pouvez ajouter ici des commandes pour envoyer des notifications d'échec
+            '''
+        }
+        always {
+            // Nettoyer les images Docker locales pour libérer de l'espace
+            sh 'docker system prune -f'
+        }
+    }
+}

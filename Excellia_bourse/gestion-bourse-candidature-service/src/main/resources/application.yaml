@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: gestion-bourse-condidature-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  cloud:
+    stream:
+      bindings:
+        usersTopicConsumer-in-0:
+          destination: usersTopic
+          group: bourse-group
+          content-type: application/json
+        userEventsConsumer-in-0:
+          destination: userEvents
+          group: userb-group
+          content-type: application/json
+      function:
+        definition: userEventsConsumer;usersTopicConsumer
+
+  cloud.config:
+    enabled: true
+
+  config:
+    import: optional:configserver:http://localhost:9998
+
+
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+server:
+  port: 8084
+
+app:
+  upload:
+    dir: uploads/pdfs
+
+logging:
+  level:
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.kafka: DEBUG
+
+

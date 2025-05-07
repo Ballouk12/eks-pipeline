@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: notification_service
+
+  config:
+    import: optional:configserver:http://localhost:9998
+
+server:
+  port: 8087
+
+
+
+spring.cloud.config:
+  enabled: true

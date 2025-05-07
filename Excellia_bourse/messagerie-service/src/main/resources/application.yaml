@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: messagerie-service
+
+  config:
+    import: optional:configserver:http://localhost:9998
+
+server:
+  port: 8086
+
+
+
+
+
+spring.cloud.config:
+  enabled: true
