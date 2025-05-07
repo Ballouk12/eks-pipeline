@@ -27,9 +27,9 @@ pipeline {
                     sh '''
                         # Setup AWS CLI explicitly
                         mkdir -p ~/.aws
-                        aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-                        aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-                        aws configure set region ${AWS_REGION}
+                        aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
+                        aws configure set aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
+                        aws configure set region "${AWS_REGION}"
                         
                         # Verify AWS credentials
                         aws sts get-caller-identity
@@ -38,27 +38,27 @@ pipeline {
                         ansible-playbook -i localhost, deployment/ansible/setup-tools.yml -c local -b
                         
                         # Authentification à ECR
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+                        aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REPO_URL}"
                         
                         # Ensure .kube directory exists
-                        mkdir -p ${WORKSPACE}/.kube
+                        mkdir -p "${WORKSPACE}/.kube"
                         
                         # Configurer kubeconfig pour accéder au cluster EKS
-                        export KUBECONFIG=${WORKSPACE}/.kube/config
-                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION} --kubeconfig ${KUBECONFIG}
+                        export KUBECONFIG="${KUBECONFIG}"
+                        aws eks update-kubeconfig --name "${CLUSTER_NAME}" --region "${AWS_REGION}" --kubeconfig "${KUBECONFIG}"
                         
                         # Test the connection to ensure credentials are working
-                        kubectl --kubeconfig=${KUBECONFIG} get svc
+                        kubectl --kubeconfig="${KUBECONFIG}" get svc
                     '''
                 }
             }
         }
+        
         stage('Build utilitiesService') {
             steps {
-                dir("Excellia_bourse/utilitiesService") {
-                    // Construction du JAR de utilitiesService et installation dans le repo local Maven
+                dir('Excellia_bourse/utilitiesService') {
                     sh 'mvn clean install -DskipTests'
-                    echo "utilitiesService built and installed in local Maven repository"
+                    echo 'utilitiesService built and installed in local Maven repository'
                 }
             }
         }
@@ -66,16 +66,13 @@ pipeline {
         stage('Build and Push Backend Images') {
             steps {
                 script {
-                    def servicesList = SERVICES.split(' ')
-                    for (int i = 0; i < servicesList.length; i++) {
-                        def service = servicesList[i]
+                    def servicesList = env.SERVICES.split(' ')
+                    servicesList.each { service ->
                         dir("Excellia_bourse/${service}") {
-                            // Construction du JAR
                             sh 'mvn clean package -DskipTests'
                             
                             def imageTag = "${ECR_REPO_URL}:${service}-${BUILD_NUMBER}"
                             
-                            // Construction et push de l'image Docker
                             sh """
                                 docker build -t ${imageTag} .
                                 docker push ${imageTag}
@@ -89,8 +86,8 @@ pipeline {
         
         stage('Build and Push Frontend Image') {
             steps {
-                script {
-                    dir(FRONTEND_APP) {
+                dir("${FRONTEND_APP}") {
+                    script {
                         def frontendImageTag = "${ECR_REPO_URL}:frontend-${BUILD_NUMBER}"
                         
                         sh """
@@ -110,22 +107,20 @@ pipeline {
                     
                     # Générer les ConfigMaps, Secrets, etc. à partir des templates
                     python3 deployment/scripts/generate_k8s_manifests.py \
-                        --build-number ${BUILD_NUMBER} \
-                        --ecr-repo ${ECR_REPO_URL} \
+                        --build-number "${BUILD_NUMBER}" \
+                        --ecr-repo "${ECR_REPO_URL}" \
                         --output-dir kubernetes-manifests
                 '''
                 
-                // Archiver les manifestes générés pour référence future
                 archiveArtifacts artifacts: 'kubernetes-manifests/**/*', fingerprint: true
             }
         }
         
         stage('Deploy to EKS') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}"){
+                withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
                     sh '''
-                        # Use the workspace kubeconfig
-                        export KUBECONFIG=${WORKSPACE}/.kube/config
+                        export KUBECONFIG="${KUBECONFIG}"
                         
                         # Refresh AWS credentials before kubectl operations
                         export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
@@ -134,29 +129,29 @@ pipeline {
                         # Vérifier la connexion au cluster
                         kubectl get nodes
                         
-                        # Apply manifests...
+                        # Apply manifests
                         kubectl apply -f kubernetes-manifests/configmaps/
-                        # ... rest of your deployment
                     '''
                 }
             }
         }
         
-        
         stage('Validate Deployment') {
-            steps {.
-            withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}"){
-                sh '''
-                    # Vérifier que tous les pods sont en running
-                    kubectl wait --for=condition=Ready pods --all -n excellia --timeout=300s
-                    
-                    # Récupérer l'URL du service de frontend
-                    FRONTEND_URL=$(kubectl get svc frontend -n excellia -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                    
-                    echo "Application déployée avec succès!"
-                    echo "Frontend accessible à l'adresse: http://${FRONTEND_URL}"
-                    echo "Cluster endpoint: ${CLUSTER_ENDPOINT}"
-                '''
+            steps {
+                withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                    sh '''
+                        export KUBECONFIG="${KUBECONFIG}"
+                        
+                        # Vérifier que tous les pods sont en running
+                        kubectl wait --for=condition=Ready pods --all -n excellia --timeout=300s
+                        
+                        # Récupérer l'URL du service de frontend
+                        FRONTEND_URL=$(kubectl get svc frontend -n excellia -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                        
+                        echo "Application déployée avec succès!"
+                        echo "Frontend accessible à l'adresse: http://${FRONTEND_URL}"
+                        echo "Cluster endpoint: ${CLUSTER_ENDPOINT}"
+                    '''
                 }
             }
         }
@@ -165,23 +160,17 @@ pipeline {
     post {
         success {
             echo 'Pipeline exécuté avec succès! L\'application est déployée sur EKS.'
-            
-            // Envoyer une notification de succès
             sh '''
-                # Vous pouvez ajouter ici des commandes pour envoyer des notifications
-                # Par exemple, un webhook vers Slack ou Microsoft Teams
+                # Placeholder pour notifications de succès (Slack, Teams, etc.)
             '''
         }
         failure {
             echo 'Le pipeline a échoué. Vérifiez les logs pour plus de détails.'
-            
-            // Envoyer une notification d'échec
             sh '''
-                # Vous pouvez ajouter ici des commandes pour envoyer des notifications d'échec
+                # Placeholder pour notifications d'échec
             '''
         }
         always {
-            // Nettoyer les images Docker locales pour libérer de l'espace
             sh 'docker system prune -f'
         }
     }
