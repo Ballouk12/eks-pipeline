@@ -99,7 +99,7 @@ pipeline {
                         --output-dir kubernetes-manifests
                 '''
                 
-                // Archiver les manifestes générés pour référence future
+                // Archiver les manifestes générés pour référence future et ca
                 archiveArtifacts artifacts: 'kubernetes-manifests/**/*', fingerprint: true
             }
         }
