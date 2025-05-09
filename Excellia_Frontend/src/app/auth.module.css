@@ -5,13 +5,13 @@
     text-align: center; 
     margin-bottom: 5px; 
     margin-right: 200px;
-    background-color : #068b2e
+    background-color : #df3011
   }
   
   .title1 {
     font-size: 50px; 
     margin-bottom: 10px;
-    background: linear-gradient(to bottom, #068b2e, #bbb);
+    background: linear-gradient(to bottom, #df3011, #bbb);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -99,14 +99,14 @@
   
   .formGroup input:focus {
     outline: none;
-    border-color: #2de348;
+    border-color: #df3011;
   }
   
   .authButton {
     margin-top: 10px;
     padding: 14px;
     border: none;
-    background-color: #188f14;
+    background-color: #df3011;
     color: white;
     font-size: 16px;
     font-weight: 500;
@@ -116,11 +116,11 @@
   }
   
   .authButton:hover {
-    background-color: #0ce784;
+    background-color: #df3011;
   }
   
   .authButton:disabled {
-    background-color: #068b2e;
+    background-color: #df3011;
     cursor: not-allowed;
   }
   
@@ -132,13 +132,13 @@
   }
   
   .authLink {
-    color: #068b2e;
+    color: #df3011;
     font-weight: 500;
     transition: color 0.3s;
   }
   
   .authLink:hover {
-    color: #068b2e;
+    color: #df3011;
     text-decoration: underline;
   }
   
@@ -149,7 +149,7 @@
     border-radius: 5px;
     font-size: 14px;
     margin-bottom: 20px;
-    border: 1px solid #068b2e;
+    border: 1px solid #df3011;
   }
   
   /* Media query for tablets and desktop */
